@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+*.log
+.env
+venv/
+.venv/
+sync_script.log
