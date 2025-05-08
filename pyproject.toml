@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sync2llmtxt"
 version = "0.1.0"
 authors = [
-  {name = "Author", email = "your.email@example.com"}
+  {name = "wangjojo", email = "wangjojo@gmail.com"}
 ]
 description = "Automatically aggregate source code files into a single text file for LLM context"
 readme = "README.md"
