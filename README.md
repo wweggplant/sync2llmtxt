@@ -25,14 +25,25 @@ You can specify the target file as a directory in Google Drive, allowing the pro
   - Filters by modification time (`--since-days`).
 - **Detailed Logging**: Multi-level logging for debugging.
 
-## Usage
+## Installation
 
-### Install Dependencies
+### Option 1: Install from PyPI (Recommended)
 
 ```bash
-# Main dependencies
-pip install -r requirements.txt
-# Test dependencies (optional)
+pip install sync2llmtxt
+```
+
+### Option 2: Install from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/sync2llmtxt.git
+cd sync2llmtxt
+
+# Install in development mode
+pip install -e .
+
+# For development dependencies (optional)
 pip install -r requirements-test.txt
 ```
 
@@ -62,17 +73,17 @@ DEBOUNCE_TIME: 2.0
 | `--max-size` | Maximum file size (MB) | `--max-size 2` |
 | `--since-days` | Days since last modification | `--since-days 7` |
 
-### Run Examples
+### Usage Examples
 
 ```bash
 # Basic usage
-python3 sync2llmtxt.py -s ./project -o output.txt
+sync2llmtxt -s ./project -o output.txt
 
 # Use config file + filter large files
-python3 sync2llmtxt.py -c config.yaml --max-size 1.5
+sync2llmtxt -c config.yaml --max-size 1.5
 
 # Sync only recently modified files
-python3 sync2llmtxt.py -s ./src -o out.txt --since-days 3
+sync2llmtxt -s ./src -o out.txt --since-days 3
 ```
 
 ## Testing (Pending)
@@ -117,8 +128,8 @@ project/
 
 ### Code Structure
 
-- `sync2llmtxt.py`: Main program.
-- `directory_tree.py`: Directory tree generation module.
+- `src/sync2llmtxt/sync2llmtxt.py`: Main program.
+- `src/sync2llmtxt/directory_tree.py`: Directory tree generation module.
 - `tests/`: Unit tests.
 
 ### Extension Suggestions

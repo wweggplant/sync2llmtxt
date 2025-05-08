@@ -13,7 +13,7 @@ import argparse
 import yaml
 from gitignore_parser import parse_gitignore
 from pathlib import Path
-from directory_tree import generate_directory_structure
+from .directory_tree import generate_directory_structure
 
 # --- 配置区 ---
 # (Configuration remains the same as your last version)
@@ -52,8 +52,8 @@ OUTPUT_DOCUMENT_PATH = '/path/to/your/output.txt'  # 请根据实际需求修改
 # 4. 忽略模式
 IGNORE_PATTERNS = [
     'node_modules', '.git', '__pycache__', 'venv', '.venv', 'env',
-    '.vscode', '.idea', 'build', 'dist', '.next', 'shared/generated',
-    'shared/prisma/prisma/dev.db', '.DS_Store', '.mypy_cache',
+    '.vscode', '.idea', 'build', 'dist', '.next', 'generated',
+    '*.db', '.DS_Store', '.mypy_cache',
     '.pytest_cache', '.ruff_cache', '*.pyc', '*.swp', '*~', '*.log',
     '*.db', '*.sqlite', '*.sqlite3', '*.node', '*.so', '*.dll', '*.dylib',
     '*.gz', '*.zip', '*.tar', '*.rar', '*.png', '*.jpg', '*.jpeg', '*.gif',
@@ -200,85 +200,6 @@ def should_ignore(path):
     # If no pattern matched
     return False
 
-def generate_directory_structure(root_dir):
-    """生成目录结构的字符串表示，忽略指定模式"""
-    structure_lines = []
-    # Start with the root directory name
-    structure_lines.append(os.path.basename(root_dir) + os.sep)
-
-    def build_tree_recursive(current_dir, prefix, is_last_list):
-        try:
-            entries = sorted(os.listdir(current_dir))
-        except OSError as e:
-            logger.warning(f"Cannot list directory '{current_dir}' for tree structure: {e}")
-            # Indicate error in tree if possible? Or just return. Let's just return.
-            # structure_lines.append(f"{prefix}[Error listing directory]")
-            return # Stop traversing this branch
-
-        # Filter entries based on ignore patterns
-        filtered_entries = []
-        for entry in entries:
-            full_path = os.path.join(current_dir, entry)
-            if not should_ignore(full_path):
-                 filtered_entries.append(entry)
-            else:
-                 logger.debug(f"Skipping tree entry: '{full_path}' (ignored by should_ignore)")
-
-
-        num_entries = len(filtered_entries)
-        for i, entry in enumerate(filtered_entries):
-            is_last_entry = (i == num_entries - 1)
-            full_path = os.path.join(current_dir, entry)
-
-            # Build the prefix string based on the is_last_list state
-            current_prefix_str = ""
-            for is_last_parent in is_last_list:
-                current_prefix_str += "    " if is_last_parent else "│   "
-
-            connector = "└── " if is_last_entry else "├── "
-
-            display_name = entry
-            if os.path.isdir(full_path):
-                 display_name += os.sep # Add a slash to directory names in the tree
-
-            structure_lines.append(f"{current_prefix_str}{connector}{display_name}")
-
-            if os.path.isdir(full_path):
-                # Recursively call for subdirectories
-                # Pass updated prefix and append current entry's last status to the list
-                build_tree_recursive(full_path, prefix + ("    " if is_last_entry else "│   "), is_last_list + [is_last_entry])
-
-    # Start the recursive process for the children of the root directory
-    try:
-        root_entries = sorted(os.listdir(root_dir))
-        # Filter root entries using should_ignore
-        filtered_root_entries = [
-            entry for entry in root_entries
-            if not should_ignore(os.path.join(root_dir, entry))
-        ]
-        num_root_entries = len(filtered_root_entries)
-
-        for i, entry in enumerate(filtered_root_entries):
-            is_last_entry = (i == num_root_entries - 1)
-            full_path = os.path.join(root_dir, entry)
-
-            connector = "└── " if is_last_entry else "├── "
-            display_name = entry
-            if os.path.isdir(full_path):
-                 display_name += os.sep
-
-            structure_lines.append(f"{connector}{display_name}")
-
-            if os.path.isdir(full_path):
-                 # Start recursive call for subdirectories, initial is_last_list contains only the status of this entry
-                 build_tree_recursive(full_path, ("    " if is_last_entry else "│   "), [is_last_entry])
-
-    except OSError as e:
-        logger.error(f"FATAL: Cannot list root directory '{root_dir}' to generate tree structure: {e}")
-        return "*** Error generating directory structure ***" # Return an error message
-
-    return "\n".join(structure_lines)
-
 
 @throttle.wrap(20, 1)  # 20秒内只允许1次
 def aggregate_code_to_document(is_manual_run=False, max_file_size_warn=1*1024*1024, since_timestamp=None):
@@ -366,7 +287,7 @@ def aggregate_code_to_document(is_manual_run=False, max_file_size_warn=1*1024*10
     # --- 添加目录结构 ---
     logger.info("Generating directory structure...")
     try:
-        dir_structure = generate_directory_structure(MONITORED_CODE_DIR)
+        dir_structure = generate_directory_structure(MONITORED_CODE_DIR, should_ignore_fn=should_ignore)
         final_content += "\n\n---\n\n" # Separator before structure
         final_content += "--- Directory Structure (Ignoring Patterns) ---\n\n"
         final_content += dir_structure
@@ -449,8 +370,13 @@ class CodeChangeHandler(FileSystemEventHandler):
              logger.debug(f"Event path '{normalized_path}' does not match code file patterns.")
 
 
-# --- 主执行块 (__main__) ---
-if __name__ == "__main__":
+def main():
+    """Main entry point for the script."""
+    # 全局变量引用
+    global MONITORED_CODE_DIR, OUTPUT_DOCUMENT_PATH, CODE_FILE_PATTERNS
+    global IGNORE_PATTERNS, ENABLE_AUTOMATIC_MONITORING, DEBOUNCE_TIME
+    global gitignore_matcher
+    
     # --- Setup Logging FIRST ---
     setup_logging() # Initialize logging to file and console
 
@@ -493,7 +419,7 @@ if __name__ == "__main__":
     logger.info(f"模式: {'自动监控' if ENABLE_AUTOMATIC_MONITORING else '手动运行'}")
     logger.info(f"监控/源目录: {MONITORED_CODE_DIR}")
     logger.info(f"目标文档: {OUTPUT_DOCUMENT_PATH}")
-    logger.info(f"监控文件类型: {', '.join(CODE_FILE_PATTERNS)}")
+    logger.info(f"监控文件类型: {', '.join(CODE_FILE_PATTERNS[:5])}... 等{len(CODE_FILE_PATTERNS)}种")
     logger.info(f"忽略模式数量: {len(IGNORE_PATTERNS)}") # Log count instead of full list to console
     logger.debug(f"忽略模式列表: {', '.join(IGNORE_PATTERNS)}") # Full list in debug log
     if ENABLE_AUTOMATIC_MONITORING:
@@ -549,3 +475,7 @@ if __name__ == "__main__":
         logging.shutdown()
         time.sleep(0.1)
         sys.exit(0)
+
+# --- 主执行块 (__main__) ---
+if __name__ == "__main__":
+    main() 
