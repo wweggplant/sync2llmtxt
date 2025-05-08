@@ -1,4 +1,4 @@
-from sync2txt import should_ignore, IGNORE_PATTERNS, setup_gitignore_parser
+from sync2llmtxt import should_ignore, IGNORE_PATTERNS, setup_gitignore_parser
 
 def test_should_ignore_patterns(tmp_path):
     (tmp_path / 'node_modules').mkdir()

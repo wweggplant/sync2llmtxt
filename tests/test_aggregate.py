@@ -1,7 +1,7 @@
 import sys
 import os
 import time
-from sync2txt import aggregate_code_to_document
+from sync2llmtxt import aggregate_code_to_document
 
 def test_aggregate_code_to_document(tmp_path):
     # 创建小文件和大文件
@@ -10,8 +10,8 @@ def test_aggregate_code_to_document(tmp_path):
     small.write_text('x=1')
     big.write_bytes(b'x' * 2 * 1024 * 1024)  # 2MB
     out_file = tmp_path / 'out.txt'
-    sys.modules['sync2txt'].MONITORED_CODE_DIR = str(tmp_path)
-    sys.modules['sync2txt'].OUTPUT_DOCUMENT_PATH = str(out_file)
+    sys.modules['sync2llmtxt'].MONITORED_CODE_DIR = str(tmp_path)
+    sys.modules['sync2llmtxt'].OUTPUT_DOCUMENT_PATH = str(out_file)
     aggregate_code_to_document(is_manual_run=True, max_file_size_warn=1*1024*1024)
     content = out_file.read_text()
     assert 'small.py' in content
@@ -25,8 +25,8 @@ def test_aggregate_code_to_document_since_days(tmp_path):
     old_mtime = time.time() - 10 * 86400
     os.utime(old, (old_mtime, old_mtime))
     out_file = tmp_path / 'out.txt'
-    sys.modules['sync2txt'].MONITORED_CODE_DIR = str(tmp_path)
-    sys.modules['sync2txt'].OUTPUT_DOCUMENT_PATH = str(out_file)
+    sys.modules['sync2llmtxt'].MONITORED_CODE_DIR = str(tmp_path)
+    sys.modules['sync2llmtxt'].OUTPUT_DOCUMENT_PATH = str(out_file)
     aggregate_code_to_document(is_manual_run=True, max_file_size_warn=1*1024*1024, since_timestamp=time.time() - 7*86400)
     content = out_file.read_text()
     assert 'new.py' in content

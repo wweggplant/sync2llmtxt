@@ -1,5 +1,5 @@
 import yaml
-from sync2txt import load_config
+from sync2llmtxt import load_config
 
 def test_load_config(tmp_path):
     config_path = tmp_path / 'config.yaml'

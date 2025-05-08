@@ -1,6 +1,6 @@
 # Introduction
 
-`sync2txt` is a script designed to automatically aggregate source code files from a specified directory into a single text file in a target directory. This facilitates providing the entire project code as context to large language models (e.g., LLM/LLMtxt). The script supports automatic directory monitoring for real-time updates to the aggregated document, as well as manual execution for one-time generation.
+`sync2llmtxt` is a script designed to automatically aggregate source code files from a specified directory into a single text file in a target directory. This facilitates providing the entire project code as context to large language models (e.g., LLM/LLMtxt). The script supports automatic directory monitoring for real-time updates to the aggregated document, as well as manual execution for one-time generation.
 
 [中文](README-ZH.md) English
 ---
@@ -66,13 +66,13 @@ DEBOUNCE_TIME: 2.0
 
 ```bash
 # Basic usage
-python3 sync2txt.py -s ./project -o output.txt
+python3 sync2llmtxt.py -s ./project -o output.txt
 
 # Use config file + filter large files
-python3 sync2txt.py -c config.yaml --max-size 1.5
+python3 sync2llmtxt.py -c config.yaml --max-size 1.5
 
 # Sync only recently modified files
-python3 sync2txt.py -s ./src -o out.txt --since-days 3
+python3 sync2llmtxt.py -s ./src -o out.txt --since-days 3
 ```
 
 ## Testing (Pending)
@@ -117,7 +117,7 @@ project/
 
 ### Code Structure
 
-- `sync2txt.py`: Main program.
+- `sync2llmtxt.py`: Main program.
 - `directory_tree.py`: Directory tree generation module.
 - `tests/`: Unit tests.
 
